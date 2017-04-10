@@ -1,0 +1,775 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="OpenStack,Nova," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="很多成熟的公有云产品在申请虚拟机资源的时候，都可以定制客制化的用户信息，如盛大云、阿里云等可以定制虚拟机的服务器名称，用户名及密码口令等。特别是用户口令，虽然OpenStack有非常成熟的公私钥KeyPairs登陆体系，但是对于国内大多开发者还是习惯于用户名口令的登陆方式。某些场景下，服务器管理员在客户现场需要对服务器进行某些简单操作，也许没有SSH环境等，这时如果通过VNC的方式就比较简单，">
+<meta name="keywords" content="OpenStack,Nova">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack虚拟机的用户客制化方法（User Data）">
+<meta property="og:url" content="http://lightthewoods.me/2012/10/30/OpenStack虚拟机的用户客制化方法（User-Data）/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="很多成熟的公有云产品在申请虚拟机资源的时候，都可以定制客制化的用户信息，如盛大云、阿里云等可以定制虚拟机的服务器名称，用户名及密码口令等。特别是用户口令，虽然OpenStack有非常成熟的公私钥KeyPairs登陆体系，但是对于国内大多开发者还是习惯于用户名口令的登陆方式。某些场景下，服务器管理员在客户现场需要对服务器进行某些简单操作，也许没有SSH环境等，这时如果通过VNC的方式就比较简单，">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2012-10-30-01">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2012-10-30-02">
+<meta property="og:updated_time" content="2016-02-04T07:27:46.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenStack虚拟机的用户客制化方法（User Data）">
+<meta name="twitter:description" content="很多成熟的公有云产品在申请虚拟机资源的时候，都可以定制客制化的用户信息，如盛大云、阿里云等可以定制虚拟机的服务器名称，用户名及密码口令等。特别是用户口令，虽然OpenStack有非常成熟的公私钥KeyPairs登陆体系，但是对于国内大多开发者还是习惯于用户名口令的登陆方式。某些场景下，服务器管理员在客户现场需要对服务器进行某些简单操作，也许没有SSH环境等，这时如果通过VNC的方式就比较简单，">
+<meta name="twitter:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2012-10-30-01">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2012/10/30/OpenStack虚拟机的用户客制化方法（User-Data）/"/>
+
+
+
+
+
+  <title> OpenStack虚拟机的用户客制化方法（User Data） | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2012/10/30/OpenStack虚拟机的用户客制化方法（User-Data）/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                OpenStack虚拟机的用户客制化方法（User Data）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2012-10-30T11:54:19+08:00">
+                2012-10-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2012/10/30/OpenStack虚拟机的用户客制化方法（User-Data）/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2012-10-30-01" alt="盛大云的用户信息定制界面"><br>　　很多成熟的公有云产品在申请虚拟机资源的时候，都可以定制客制化的用户信息，如盛大云、阿里云等可以定制虚拟机的服务器名称，用户名及密码口令等。特别是用户口令，虽然OpenStack有非常成熟的公私钥KeyPairs登陆体系，但是对于国内大多开发者还是习惯于用户名口令的登陆方式。某些场景下，服务器管理员在客户现场需要对服务器进行某些简单操作，也许没有SSH环境等，这时如果通过VNC的方式就比较简单，然而KeyPair的登陆方式还不支持VNC模式。<br><a id="more"></a><br>　　在服务器管理员需要使用用户名口令的方式进行登陆的模式下，如果能让用户自己定义用户名口令可以提高一定的安全等级，增加用户对产品的认知和信任度。<br>　　在OpenStack中，我们通过user-data功能实现客户信息的定制，可以对虚拟机进行许多初始化的操作如设定语言区域，设定主机名称，生成SSH密钥，设定挂载节点等。<br>　　通过研究ubuntucloud-init和AWS的相关文档，user-data的设置可以支持有以下几种脚本语言：</p>
+<ul>
+<li>Gzip Compressed Content<br>content found to be gzip compressed will be uncompressed.<br>Theuncompressed data will then be used as if it were not<br>compressed.Compression of data is useful because user-data is<br>limited to 16384bytes1</li>
+<li>Mime Multi Part archive<br>This list of rules is applied to each part ofthis multi-part<br>file. Using a mime-multi part file, the user canspecify more than<br>one type of data. For example, both a user datascript and a<br>cloud-config type could be specified.</li>
+<li>User-Data Script<br>begins with: “#!” or”Content-Type: text/x-shellscript”<br>script will be executed at “rc.local-like” level during first boot.rc.local-like means “very late in the boot sequence”</li>
+<li>Include File<br>begins with “#include” or”Content-Type: text/x-include-url”<br>This content is a “include” file. The file contains a list of urls,one per line. Each of the URLs will be read, and their content willbe passed through this same set of rules. Ie, the content read fromthe URL can be gzipped, mime-multi-part, or plain text</li>
+<li>Cloud Config Data<br>begins with “#cloud-config” or”Content-Type: text/cloud-config”<br>This content is “cloud-config” data. See the examples for acommented example of supported config formats.</li>
+<li>Upstart Job<br>begins with “#upstart-job” or”Content-Type: text/upstart-job”<br>Content is placed into a file in /etc/init, and will be consumed byupstart as any other upstart job.</li>
+<li>Cloud Boothook<br>begins with “#cloud-boothook” or”Content-Type: text/cloud-boothook”<br>This content is “boothook” data. It is stored in a file under/var/lib/cloud and then executed immediately.<br>This is the earliest “hook” available. Note, that there is nomechanism provided for running only once. The boothook must takecare of this itself. It is provided with the instance id in theenvironment variable “INSTANCE_ID”. This could be made use of toprovide a ‘once-per-instance’<br>Only available in 10.10 or later (cloud-init 0.5.12 andlater)</li>
+<li>Part Handler<br>begins with “#part-handler” or”Content-Type: text/part-handler”<br>This is a ‘part-handler’. It will be written to a file in/var/lib/cloud/data based on its filename. This must be python codethat contains a list_types method and a handle_type method.<br>Oncethe section is read the ‘list_types’ method will be called. It mustreturn a list of mime-types that this part-handler handlers.<br>The ‘handle_type’ method must be like:<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">handle_part</span><span class="params">(data,ctype,filename,payload)</span>:</span></div><div class="line"><span class="comment"># data = the cloudinit object</span></div><div class="line"><span class="comment"># ctype = "__begin__", "__end__", or the mime-type of the part that is</span></div><div class="line"><span class="comment"># being handled.</span></div><div class="line"><span class="comment"># filename = the filename of the part (or a generated filename if none is</span></div><div class="line"><span class="comment"># present in mime data)# payload = the parts' content</span></div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>　　这里主要关注User-Data Script，其使用的就是常用的shell脚本，我们只要在dashboard创建虚拟机的时候讲脚本写入user data输入框中即可。<br><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2012-10-30-02" alt="user-data sample"><br>　　目前还仅仅测试了ubuntu的cloudimage，非UEC镜像即使按照installturtion安装了cloud-init包也没有测试成功，还在查找原因，后面弄好了会接着给大家介绍。</p>
+<hr>
+<p>　　非UEC镜像的问题实际上是cloud-init这个包的安装需要进行配置，详见OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入userdata。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/OpenStack/" rel="tag"># OpenStack</a>
+          
+            <a href="/tags/Nova/" rel="tag"># Nova</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2012/10/31/OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user-data/" rel="next" title="OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user data">
+                <i class="fa fa-chevron-left"></i> OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user data
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "abb18f73d61b4319b07352052b36d826",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

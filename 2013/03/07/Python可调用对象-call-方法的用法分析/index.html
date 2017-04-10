@@ -1,0 +1,796 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Python,语法糖," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="最近有许多朋友私信问我，Python的可调用对象到底有什么用处，为什么要费事的重载括号而不是直接绑定类的普通方法。下面就来为大家分享__call__可调用对象的一些感悟。  精简代码在类中设置__call__方法，可以精简代码，方便接口调用的『约定俗成』123456789101112131415161718192021222324252627class route(object):    def">
+<meta name="keywords" content="Python,语法糖">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python可调用对象__call__方法的用法分析">
+<meta property="og:url" content="http://lightthewoods.me/2013/03/07/Python可调用对象-call-方法的用法分析/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="最近有许多朋友私信问我，Python的可调用对象到底有什么用处，为什么要费事的重载括号而不是直接绑定类的普通方法。下面就来为大家分享__call__可调用对象的一些感悟。  精简代码在类中设置__call__方法，可以精简代码，方便接口调用的『约定俗成』123456789101112131415161718192021222324252627class route(object):    def">
+<meta property="og:updated_time" content="2016-03-15T08:40:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Python可调用对象__call__方法的用法分析">
+<meta name="twitter:description" content="最近有许多朋友私信问我，Python的可调用对象到底有什么用处，为什么要费事的重载括号而不是直接绑定类的普通方法。下面就来为大家分享__call__可调用对象的一些感悟。  精简代码在类中设置__call__方法，可以精简代码，方便接口调用的『约定俗成』123456789101112131415161718192021222324252627class route(object):    def">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2013/03/07/Python可调用对象-call-方法的用法分析/"/>
+
+
+
+
+
+  <title> Python可调用对象__call__方法的用法分析 | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2013/03/07/Python可调用对象-call-方法的用法分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Python可调用对象__call__方法的用法分析
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2013-03-07T10:53:11+08:00">
+                2013-03-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2013/03/07/Python可调用对象-call-方法的用法分析/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>最近有许多朋友私信问我，Python的可调用对象到底有什么用处，为什么要费事的重载括号而不是直接绑定类的普通方法。下面就来为大家分享<code>__call__</code>可调用对象的一些感悟。</p>
+</blockquote>
+<h2 id="精简代码"><a href="#精简代码" class="headerlink" title="精简代码"></a>精简代码</h2><p>在类中设置<code>__call__</code>方法，可以精简代码，方便接口调用的『约定俗成』<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">class route(object):</div><div class="line"></div><div class="line">    def __init__(self, res)</div><div class="line">	    self.resource = res</div><div class="line"></div><div class="line">    @classmethod</div><div class="line">    def factory(cls):</div><div class="line">        print &apos;factory&apos;</div><div class="line">        return cls()</div><div class="line"></div><div class="line">    @webob.dec.wsgify</div><div class="line">    def __call__(self,req):</div><div class="line">        print &apos;route __call__&apos;</div><div class="line">        return self.resource()</div><div class="line"></div><div class="line">class resource(object):</div><div class="line"></div><div class="line">    @webob.dec.wsgify</div><div class="line">    def __call__(self,req):</div><div class="line">        print &apos;resource __call__&apos;</div><div class="line"></div><div class="line">class API(route):</div><div class="line">    def __init__(self):</div><div class="line">	    res = resource()</div><div class="line">		super(API, self).__init__(res)</div><div class="line"></div><div class="line">wsgi.server(eventlet.listen((&apos;&apos;, 80)), API.factory())</div></pre></td></tr></table></figure></p>
+<p>上面的代码是一个典型的WSGI服务的节选，如果不用<code>__call__</code>，那么我们各组件之间可能要约定或规范一个接口，比如下面，大家都叫<code>notcall()</code>。。。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">class route(object):</div><div class="line"></div><div class="line">    def __init__(self, res)</div><div class="line">	    self.resource = res</div><div class="line"></div><div class="line">    @classmethod</div><div class="line">    def factory(cls):</div><div class="line">        print &apos;factory&apos;</div><div class="line">        return cls()</div><div class="line"></div><div class="line">    @webob.dec.wsgify</div><div class="line">    def notcall(self,req):</div><div class="line">        print &apos;route notcall&apos;</div><div class="line">        return self.resource.notcall()</div><div class="line"></div><div class="line">class resource(object):</div><div class="line"></div><div class="line">    @webob.dec.wsgify</div><div class="line">    def notcall(self,req):</div><div class="line">        print &apos;resource notcall&apos;</div><div class="line"></div><div class="line">class API(route):</div><div class="line">    def __init__(self):</div><div class="line">	    res = resource()</div><div class="line">		super(API, self).__init__(res)</div><div class="line"></div><div class="line">wsgi.server(eventlet.listen((&apos;&apos;, 80)), API.factory().notcall())</div></pre></td></tr></table></figure></p>
+<p>这样用起来就非常麻烦，模块之间合作要约定好接口的名字，编写记忆许多接口文档，增加代码量且容易出错。</p>
+<h2 id="可调用对象语法糖"><a href="#可调用对象语法糖" class="headerlink" title="可调用对象语法糖"></a>可调用对象语法糖</h2><p>类似上面的代码，许多模块的接口的参数都是需要一个函数调用，比如这个<code>wsgi.server(port, app)``，第二个参数就是一个实际的wsgi服务的函数调用。然后OOP大行其道的今天，貌似地球上乃至宇宙中的万物都可被抽象成对象，然而在实际的coding中，我们真的需要将所有的东西都抽象成对象吗？
+这也是我喜欢Python的一个原因，虽然Python中万物都是对象，但是却提供这种对象可调用的方式，而它可以完成一些函数不能完成的工作。比如静态变量，这在Python中是不允许的，但是通过</code><strong>call</strong>`可以这样做。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">class Factorial:</div><div class="line">    def __init__(self):</div><div class="line">        self.cache = &#123;&#125;</div><div class="line">    def __call__(self, n):</div><div class="line">        if n not in self.cache:</div><div class="line">            if n == 0:</div><div class="line">                self.cache[n] = 1</div><div class="line">            else:</div><div class="line">                self.cache[n] = n * self.__call__(n-1)</div><div class="line">        return self.cache[n]</div><div class="line"></div><div class="line">fact = Factorial()</div><div class="line"></div><div class="line">for i in xrange(10):                                                             </div><div class="line">    print(&quot;&#123;&#125;! = &#123;&#125;&quot;.format(i, fact(i)))</div><div class="line"></div><div class="line"># output</div><div class="line">0! = 1</div><div class="line">1! = 1</div><div class="line">2! = 2</div><div class="line">3! = 6</div><div class="line">4! = 24</div><div class="line">5! = 120</div><div class="line">6! = 720</div><div class="line">7! = 5040</div><div class="line">8! = 40320</div><div class="line">9! = 362880</div></pre></td></tr></table></figure></p>
+<h2 id="对象绑定"><a href="#对象绑定" class="headerlink" title="对象绑定"></a>对象绑定</h2><p>在涉及新类对象绑定的时候，可以在元类放置对象绑定时的操作代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">class test(type):</div><div class="line">    pass</div><div class="line"></div><div class="line">class test1(test):</div><div class="line">    def __call__(self):</div><div class="line">        print &quot;I am in call&quot;</div><div class="line"></div><div class="line">class test2(object):</div><div class="line">    __metaclass__=test1</div><div class="line"></div><div class="line">t=test2()</div><div class="line">#I am in call</div></pre></td></tr></table></figure></p>
+<p>test2是test1的实例。因为test1是元类。在实例绑定元类的时候，<code>__call__</code>会调用。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/语法糖/" rel="tag"># 语法糖</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2013/03/11/Linux的IO复用/" rel="next" title="Linux的IO复用">
+                <i class="fa fa-chevron-left"></i> Linux的IO复用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2013/02/27/OpenStack多节点部署（六）——-Glance/" rel="prev" title="OpenStack多节点部署（六）—— Glance">
+                OpenStack多节点部署（六）—— Glance <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#精简代码"><span class="nav-number">1.</span> <span class="nav-text">精简代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#可调用对象语法糖"><span class="nav-number">2.</span> <span class="nav-text">可调用对象语法糖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对象绑定"><span class="nav-number">3.</span> <span class="nav-text">对象绑定</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "abb18f73d61b4319b07352052b36d826",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

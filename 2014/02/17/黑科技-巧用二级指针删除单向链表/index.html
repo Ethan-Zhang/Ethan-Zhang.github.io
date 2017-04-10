@@ -1,0 +1,790 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="C/C++,算法,列表," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Linus大婶在slashdot上回答一些编程爱好者的提问，其中一个人问他什么样的代码是他所喜好的，大婶表述了自己一些观点之后，举了一个指针的例子，解释了什么才是core low-level coding。　　下面是Linus的教学原文及翻译  “At the opposite end of the spectrum, I actually wish more people understoo">
+<meta name="keywords" content="C/C++,算法,列表">
+<meta property="og:type" content="article">
+<meta property="og:title" content="黑科技--巧用二级指针删除单向链表">
+<meta property="og:url" content="http://lightthewoods.me/2014/02/17/黑科技-巧用二级指针删除单向链表/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="Linus大婶在slashdot上回答一些编程爱好者的提问，其中一个人问他什么样的代码是他所喜好的，大婶表述了自己一些观点之后，举了一个指针的例子，解释了什么才是core low-level coding。　　下面是Linus的教学原文及翻译  “At the opposite end of the spectrum, I actually wish more people understoo">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2014-02-17-01">
+<meta property="og:updated_time" content="2016-01-29T03:15:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="黑科技--巧用二级指针删除单向链表">
+<meta name="twitter:description" content="Linus大婶在slashdot上回答一些编程爱好者的提问，其中一个人问他什么样的代码是他所喜好的，大婶表述了自己一些观点之后，举了一个指针的例子，解释了什么才是core low-level coding。　　下面是Linus的教学原文及翻译  “At the opposite end of the spectrum, I actually wish more people understoo">
+<meta name="twitter:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2014-02-17-01">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2014/02/17/黑科技-巧用二级指针删除单向链表/"/>
+
+
+
+
+
+  <title> 黑科技--巧用二级指针删除单向链表 | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2014/02/17/黑科技-巧用二级指针删除单向链表/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                黑科技--巧用二级指针删除单向链表
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2014-02-17T16:43:16+08:00">
+                2014-02-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2014/02/17/黑科技-巧用二级指针删除单向链表/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>　　Linus大婶在<a href="http://meta.slashdot.org/story/12/10/11/0030249/linus-torvalds-answers-your-questions" target="_blank" rel="external">slashdot</a>上回答一些编程爱好者的提问，其中一个人问他什么样的代码是他所喜好的，大婶表述了自己一些观点之后，举了一个指针的例子，解释了什么才是<strong>core low-level coding</strong>。<br>　　下面是Linus的教学原文及翻译</p>
+<blockquote>
+<p>“At the opposite end of the spectrum, I actually wish more people understood the really core low-level kind of coding. Not big, complex stuff like the lockless name lookup, but simply good use of pointers-to-pointers etc. For example, I’ve seen too many people who delete a singly-linked list entry by keeping track of the “prev” entry, and then to delete the entry, doing something like。（在这段话的最后，我实际上希望更多的人了解什么是真正的核心底层代码。这并不像无锁文件名查询（注：可能是git源码里的设计）那样庞大、复杂，只是仅仅像诸如使用二级指针那样简单的技术。例如，我见过很多人在删除一个单项链表的时候，维护了一个”prev”表项指针，然后删除当前表项，就像这样）”<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (prev)</div><div class="line">    prev-&gt;next = entry-&gt;next;</div><div class="line"><span class="keyword">else</span></div><div class="line">    list_head = entry-&gt;next;</div></pre></td></tr></table></figure></p>
+<p>and whenever I see code like that, I just go “This person doesn’t understand pointers”. And it’s sadly quite common.（当我看到这样的代码时，我就会想“这个人不了解指针”。令人难过的是这太常见了。）<br>People who understand pointers just use a “pointer to the entry pointer”, and initialize that with the address of the list_head. And then as they traverse the list, they can remove the entry without using any conditionals, by just doing a “<code>*pp = entry-&gt;next</code>”. （了解指针的人会使用链表头的地址来初始化一个“指向节点指针的指针”。当遍历链表的时候，可以不用任何条件判断（注：指prev是否为链表头）就能移除某个节点，只要写“<code>*pp = entry-&gt;next</code>”)<br>So there’s lots of pride in doing the small details right. It may not be big and important code, but I do like seeing code where people really thought about the details, and clearly also were thinking about the compiler being able to generate efficient code (rather than hoping that the compiler is so smart that it can make efficient code <em>despite</em> the state of the original source code). （纠正细节是令人自豪的事。也许这段代码并非庞大和重要，<strong>但我喜欢看那些注重代码细节的人写的代码，也就是清楚地了解如何才能编译出有效代码</strong>（而不是寄望于聪明的编译器来产生有效代码，即使是那些原始的汇编代码））。</p>
+</blockquote>
+<p>　　Linus举了一个单向链表的例子，但给出的代码太短了，一般的人很难搞明白这两个代码后面的含义。正好，有个编程爱好者阅读了这段话，并给出了一个<a href="http://wordaligned.org/articles/two-star-programming" target="_blank" rel="external">比较完整的代码</a>。他的话我就不翻译了，下面给出代码说明。<br>　　如果我们需要写一个<code>remove_if(link*, rm_cond_func*)</code>的函数，也就是传入一个单向链表，和一个自定义的是否删除的函数，然后返回处理后的链接。<br>　　这个代码不难，基本上所有的教科书都会提供下面的代码示例，而这种写法也是大公司的面试题标准模板：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> node</div><div class="line">&#123;</div><div class="line">    <span class="keyword">struct</span> node * next;</div><div class="line">    ....</div><div class="line">&#125; node;</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">bool</span> <span class="params">(* remove_fn)</span><span class="params">(node <span class="keyword">const</span> * v)</span></span>;</div><div class="line"></div><div class="line"><span class="comment">// Remove all nodes from the supplied list for which the</span></div><div class="line"><span class="comment">// supplied remove function returns true.</span></div><div class="line"><span class="comment">// Returns the new head of the list.</span></div><div class="line"><span class="function">node * <span class="title">remove_if</span><span class="params">(node * head, remove_fn rm)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">for</span> (node * prev = <span class="literal">NULL</span>, * curr = head; curr != <span class="literal">NULL</span>; )</div><div class="line">    &#123;</div><div class="line">        node * <span class="keyword">const</span> next = curr-&gt;next;</div><div class="line">        <span class="keyword">if</span> (rm(curr))</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">if</span> (prev)</div><div class="line">                prev-&gt;next = next;</div><div class="line">            <span class="keyword">else</span></div><div class="line">                head = next;</div><div class="line">            <span class="built_in">free</span>(curr);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span></div><div class="line">            prev = curr;</div><div class="line">        curr = next;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> head;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>　　这里remove_fn由调用查提供的一个是否删除当前实体结点的函数指针，其会判断删除条件是否成立。这段代码维护了两个节点指针prev和curr，<strong>标准的教科书写法——删除当前结点时，需要一个previous的指针，并且还要这里还需要做一个边界条件的判断——curr是否为链表头</strong>。于是，要删除一个节点（不是表头），只要将前一个节点的next指向当前节点的next指向的对象，即下一个节点（即：<code>prev-&gt;next = curr-&gt;next</code>），然后释放当前节点。<br>　　但在Linus看来，这是不懂指针的人的做法。那么，什么是core low-level coding呢？那就是<strong>有效地利用二级指针，将其作为管理和操作链表的首要选项</strong>。代码如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">remove_if</span><span class="params">(node ** head, remove_fn rm)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">for</span> (node** curr = head; *curr; )</div><div class="line">    &#123;</div><div class="line">        node * entry = *curr;</div><div class="line">        <span class="keyword">if</span> (rm(entry))</div><div class="line">        &#123;</div><div class="line">            *curr = entry-&gt;next;</div><div class="line">            <span class="built_in">free</span>(entry);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">else</span></div><div class="line">            curr = &amp;entry-&gt;next;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>　　同上一段代码有何改进呢？我们看到：不需要prev指针了，也不需要再去判断是否为链表头了，但是，<strong>curr变成了一个指向指针的指针</strong>。这正是这段程序的精妙之处。（注意，我所highlight的那三行代码）<br>让我们来人肉跑一下这个代码，对于——</p>
+<ul>
+<li>删除节点是表头的情况，输入参数中传入<code>head</code>的二级指针，在for循环里将其初始化<code>curr</code>，然后<code>entry</code>就是<code>*head</code>(<code>*curr</code>)，我们马上删除它，那么第8行就等效于<code>*head = (*head)-&gt;next</code>，就是删除表头的实现。</li>
+<li>删除节点不是表头的情况，对于上面的代码，我们可以看到：<ol>
+<li>（第12行）如果不删除当前结点 —— curr保存的是当前结点next指针的地址。</li>
+<li>（第5行） entry 保存了 <code>*curr</code> —— 这意味着在下一次循环：entry就是prev-&gt;next指针所指向的内存。</li>
+<li>（第8行）删除结点：<code>*curr = entry-&gt;next</code>; —— 于是：<code>prev-&gt;next</code> 指向了 <code>entry -&gt; next</code>;<br>　　是不是很巧妙？我们可以只用一个二级指针来操作链表，对所有节点都一样。<br>　　如果你对上面的代码和描述理解上有困难的话，你可以看看下图的示意：<br><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2014-02-17-01" alt="delete list"></li>
+</ol>
+</li>
+</ul>
+<hr>
+<p><strong>2016-01-36 更新</strong><br>上面的一段解释是摘抄某个大神的解释，我想各位看的应该是晕晕乎乎的。其实不只是你，我每次隔一段时间再看这篇文章也还是要在想一遍到底是怎么回事。主要是这个示意图并不能很好的说明这个问题的根源。<br>个人觉得这段程序并没有比上面用到prev指针的方法简便许多，主要是提供一种二级指针在hack linux中的常见的使用方法。<br>二级指针，指向指针的指针，<strong>拥有修改其指向的指针的能力</strong>。这里我们主要看上面代码的第12行。二级指针curr，保存了当前节点entry的后继entry-&gt;next这个指针的地址，那么如果我们修改<code>*curr</code>，其实就是修改了<code>entry-&gt;next</code>这个指针的指向。这样的话，我们就不需要再声明一个prev指针变量，来保存节点前驱的地址，以便在删除当前节点的时候需要用前驱节点修改其后继节点的指向。去掉了prev这个前驱节点指针的变量，我们也就不再需要判断是否为header节点指针了。<br>核心思想就是在涉及指针型变量的操作时，用二级指针可以方便的修改指针的指向。</p>
+<hr>
+<hr>
+<p><strong>2014-07-14 更新</strong>　　memcached在删除hash_table中的单向表的某个节点的时候，也使用了二级指针的技术<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">assoc_delete</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *key, <span class="keyword">const</span> <span class="keyword">size_t</span> nkey, <span class="keyword">const</span> <span class="keyword">uint32_t</span> hv)</span> </span>&#123;</div><div class="line">    item **before = _hashitem_before(key, nkey, hv);</div><div class="line"></div><div class="line">    <span class="keyword">if</span> (*before) &#123;</div><div class="line">        item *nxt;</div><div class="line">        hash_items--;</div><div class="line">        <span class="comment">/* The DTrace probe cannot be triggered as the last instruction</span></div><div class="line">         * due to possible tail-optimization by the compiler</div><div class="line">         */</div><div class="line">        MEMCACHED_ASSOC_DELETE(key, nkey, hash_items);</div><div class="line">        nxt = (*before)-&gt;h_next;</div><div class="line">        (*before)-&gt;h_next = <span class="number">0</span>;   <span class="comment">/* probably pointless, but whatever. */</span></div><div class="line">        *before = nxt;</div><div class="line">        <span class="keyword">return</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">/* Note:  we never actually get here.  the callers don't delete things</span></div><div class="line">       they can't find. */</div><div class="line">    assert(*before != <span class="number">0</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>　　要实现单向列表的删除，按照一般教科书上的方法要声明两个指针，pre、cur，用来保存当前的节点和其前置的节点。但是如果应用二级指针，保存指向当前节点指针的地址**before，则*before表示指向当前节点的指针，用这个方法可以非常优雅的解决问题。</p>
+<hr>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C-C/" rel="tag"># C/C++</a>
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+            <a href="/tags/列表/" rel="tag"># 列表</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/07/14/memcached几个容易被忽略但非常有用的命令/" rel="next" title="memcached几个容易被忽略但非常有用的命令">
+                <i class="fa fa-chevron-left"></i> memcached几个容易被忽略但非常有用的命令
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2013/12/23/Tornado用回调代替gen/" rel="prev" title="Tornado用回调代替gen">
+                Tornado用回调代替gen <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "abb18f73d61b4319b07352052b36d826",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

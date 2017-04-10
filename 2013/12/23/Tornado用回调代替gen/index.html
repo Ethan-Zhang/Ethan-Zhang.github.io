@@ -1,0 +1,775 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Tornado,async," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Tornado利用python的yield机制，用gen模块可以用同步的代码逻辑书写异步调用的代码。一般的，在程序开发过程中，方便的书写逻辑必然会带来运行上的额外开销。笔者的一个整合型爬虫服务设计大量的异步调用逻辑，出现HTTP超时的比例大概为1%，查看被调用的服务日志未出现超时，怀疑是gen的协程机制未有能使IOLoop的读事件及时响应（注：此问题还未能验证）。 下面就将常见的两种异步调用场景从">
+<meta name="keywords" content="Tornado,async">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tornado用回调代替gen">
+<meta property="og:url" content="http://lightthewoods.me/2013/12/23/Tornado用回调代替gen/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="Tornado利用python的yield机制，用gen模块可以用同步的代码逻辑书写异步调用的代码。一般的，在程序开发过程中，方便的书写逻辑必然会带来运行上的额外开销。笔者的一个整合型爬虫服务设计大量的异步调用逻辑，出现HTTP超时的比例大概为1%，查看被调用的服务日志未出现超时，怀疑是gen的协程机制未有能使IOLoop的读事件及时响应（注：此问题还未能验证）。 下面就将常见的两种异步调用场景从">
+<meta property="og:updated_time" content="2016-02-10T08:01:52.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tornado用回调代替gen">
+<meta name="twitter:description" content="Tornado利用python的yield机制，用gen模块可以用同步的代码逻辑书写异步调用的代码。一般的，在程序开发过程中，方便的书写逻辑必然会带来运行上的额外开销。笔者的一个整合型爬虫服务设计大量的异步调用逻辑，出现HTTP超时的比例大概为1%，查看被调用的服务日志未出现超时，怀疑是gen的协程机制未有能使IOLoop的读事件及时响应（注：此问题还未能验证）。 下面就将常见的两种异步调用场景从">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2013/12/23/Tornado用回调代替gen/"/>
+
+
+
+
+
+  <title> Tornado用回调代替gen | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2013/12/23/Tornado用回调代替gen/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Tornado用回调代替gen
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2013-12-23T18:01:32+08:00">
+                2013-12-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2013/12/23/Tornado用回调代替gen/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Tornado利用python的yield机制，用gen模块可以用同步的代码逻辑书写异步调用的代码。一般的，在程序开发过程中，方便的书写逻辑必然会带来运行上的额外开销。笔者的一个整合型爬虫服务设计大量的异步调用逻辑，出现HTTP超时的比例大概为1%，查看被调用的服务日志未出现超时，怀疑是gen的协程机制未有能使IOLoop的读事件及时响应（注：此问题还未能验证）。</p>
+<p>下面就将常见的两种异步调用场景从Tornado的gen同步逻辑改为普通的callback异步逻辑：</p>
+<ol>
+<li><p>多次重试异步调用<br>我们访问的外部接口可能由于各种原因需要在发生错误后重试N次，用Tornado的协程来写应该是下面这样：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> tornado.web</div><div class="line"><span class="keyword">import</span> tornado.gen</div><div class="line"></div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span>                                                                            </div><div class="line"></div><div class="line"><span class="meta">    @tornado.web.asynchronous</span></div><div class="line"><span class="meta">    @tornado.gen.engine                                                                                                   </span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="string">"""Tornado handler post 入口                                                                                      </span></div><div class="line">        """</div><div class="line"></div><div class="line">        <span class="keyword">try</span>:                                                                                                              </div><div class="line">            ...                                                                                                           </div><div class="line">            some biz code here                                                                                            </div><div class="line">            ...                                                                                                           </div><div class="line"></div><div class="line">            retry_n = <span class="number">3</span>                                                                                                   </div><div class="line">            <span class="keyword">while</span> retry_n &gt; <span class="number">0</span>:                                                                                            </div><div class="line">                response = <span class="keyword">yield</span> tornado.gen.Task(http_client.fetch, request)                                             </div><div class="line">                <span class="keyword">if</span> response.code == <span class="number">200</span>:                                                                                  </div><div class="line">                    <span class="keyword">break</span></div><div class="line">                retry_n -= <span class="number">1</span></div><div class="line">            <span class="keyword">else</span>:   </div><div class="line">                <span class="comment">#超过了重试的最大次数，抛出异常                                                                           </span></div><div class="line">                <span class="keyword">raise</span> ServiceError                                                                                        </div><div class="line"></div><div class="line">            ...</div><div class="line">            some biz code here</div><div class="line">            ...</div><div class="line">            self.finish(ok)</div><div class="line"></div><div class="line">        <span class="keyword">except</span>:</div><div class="line">            ....</div></pre></td></tr></table></figure>
+<p>改为普通的异步回调callback的写法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> tornado.web</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></div><div class="line"></div><div class="line"><span class="meta">    @tornado.web.asynchronous</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="string">"""Tornado handler post 入口</span></div><div class="line">        """</div><div class="line"></div><div class="line">        ...</div><div class="line">        some biz code here</div><div class="line">        ...</div><div class="line"></div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            notify(<span class="number">3</span>)</div><div class="line">        <span class="keyword">except</span>:</div><div class="line">            ...</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post1</span><span class="params">(self, data)</span>:</span></div><div class="line">        <span class="string">"""继续处理post未完成的步骤</span></div><div class="line">        """</div><div class="line"></div><div class="line">        ...</div><div class="line">        some biz code here</div><div class="line">        ...</div><div class="line"></div><div class="line">        self.finish(<span class="string">'ok'</span>)</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">notify</span><span class="params">(self, retry_t)</span>:</span></div><div class="line">        <span class="string">"""循环访问异步接口</span></div><div class="line">        retry_t 标志访问的次数</div><div class="line">        """</div><div class="line"></div><div class="line">        <span class="keyword">if</span> retry_t &lt;= <span class="number">0</span>:</div><div class="line">            <span class="comment">#超过了重试的最大次数，抛出异常</span></div><div class="line">            <span class="keyword">raise</span> ServiceError</div><div class="line"></div><div class="line">        <span class="function"><span class="keyword">def</span> <span class="title">fetch_cb</span><span class="params">(data)</span>:</span></div><div class="line">            <span class="string">"""异步http client回调，如果code不为200，继续调用notify</span></div><div class="line">            """</div><div class="line"></div><div class="line">            <span class="keyword">if</span> data.code == <span class="number">200</span>:</div><div class="line">                self.post1(data.body)</div><div class="line">            <span class="keyword">else</span>:</div><div class="line">                self.notify(retry_t<span class="number">-1</span>)</div><div class="line"></div><div class="line">        <span class="comment"># 异步的http client</span></div><div class="line">        http_client.fetch(request, fetch_cb)</div></pre></td></tr></table></figure>
+</li>
+<li><p>异步调用列表<br>另一个典型的场景是有一系列的异步调用，希望所有的调用都返回结构之后在开始后面的代码流程<br>用tornado的gen逻辑来实现就是下面的写法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> tornado.web</div><div class="line"><span class="keyword">import</span> tornado.gen</div><div class="line"></div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></div><div class="line"></div><div class="line"><span class="meta">    @tornado.web.asynchronous</span></div><div class="line"><span class="meta">    @tornado.gen.engine</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="string">"""Tornado handler post 入口</span></div><div class="line">        """</div><div class="line"></div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            ...</div><div class="line">            some biz code here</div><div class="line">            ...</div><div class="line"></div><div class="line">            response = <span class="keyword">yield</span> tornado.gen.Task[(http_client.fetch, request1),</div><div class="line">                                            http_client.fetch, request2),</div><div class="line">                                            http_client.fetch, request3),</div><div class="line">                                            http_client.fetch, request4)]</div><div class="line"></div><div class="line">            ...</div><div class="line">            some biz code here</div><div class="line">            ...</div><div class="line"></div><div class="line">            self.finish(ok)</div><div class="line"></div><div class="line">        <span class="keyword">except</span>:</div><div class="line">            ....</div></pre></td></tr></table></figure>
+<p>改为普通的异步回调callback写法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> tornado.web</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">TestHandler</span><span class="params">(tornado.web.RequestHandler)</span>:</span></div><div class="line"></div><div class="line"><span class="meta">    @tornado.web.asynchronous</span></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="string">"""Tornado handler post 入口</span></div><div class="line">        """</div><div class="line"></div><div class="line">        ...</div><div class="line">        some biz code here</div><div class="line">        ...</div><div class="line"></div><div class="line">        <span class="keyword">try</span>:</div><div class="line">            notify = notify_list(<span class="number">4</span>, self.post1)</div><div class="line"></div><div class="line">            <span class="comment"># 异步的http client</span></div><div class="line">            http_client.fetch(request1, notify.notify_list_cb)</div><div class="line">            http_client.fetch(request2, notify.notify_list_cb)</div><div class="line">            http_client.fetch(request3, notify.notify_list_cb)</div><div class="line">            http_client.fetch(request4, notify.notify_list_cb)</div><div class="line"></div><div class="line">        <span class="keyword">except</span>:</div><div class="line">            ...</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post1</span><span class="params">(self, data)</span>:</span></div><div class="line">        <span class="string">"""继续处理post未完成的步骤</span></div><div class="line">        """</div><div class="line"></div><div class="line">        ...</div><div class="line">        some biz code here</div><div class="line">        ...</div><div class="line"></div><div class="line">        self.finish(<span class="string">'ok'</span>)</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">NotifyList</span><span class="params">(object)</span>:</span></div><div class="line">    <span class="string">"""用于处理回调列表的类</span></div><div class="line">    """</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, caller_n, final_cb)</span>:</span></div><div class="line">        <span class="string">"""</span></div><div class="line">            caller_n 回调列表的长度</div><div class="line">            final_cb 全部回调完成后的最终出口回调</div><div class="line">        """</div><div class="line"></div><div class="line">        self._caller_n = caller_n</div><div class="line">        self._data_list = []</div><div class="line">        self._final_cb = final_cb</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">notify_list_cb</span><span class="params">(self, data)</span>:</span></div><div class="line"></div><div class="line">        self._caller_n -=<span class="number">1</span></div><div class="line">        <span class="keyword">if</span> self._caller_n == <span class="number">0</span>:</div><div class="line">            self._final_cb(self._data_list)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            self._data_list.append(data)</div></pre></td></tr></table></figure>
+</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Tornado/" rel="tag"># Tornado</a>
+          
+            <a href="/tags/async/" rel="tag"># async</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2014/02/17/黑科技-巧用二级指针删除单向链表/" rel="next" title="黑科技--巧用二级指针删除单向链表">
+                <i class="fa fa-chevron-left"></i> 黑科技--巧用二级指针删除单向链表
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2013/12/18/OpenStack基础组件kombu杂谈/" rel="prev" title="OpenStack基础组件kombu杂谈">
+                OpenStack基础组件kombu杂谈 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "abb18f73d61b4319b07352052b36d826",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

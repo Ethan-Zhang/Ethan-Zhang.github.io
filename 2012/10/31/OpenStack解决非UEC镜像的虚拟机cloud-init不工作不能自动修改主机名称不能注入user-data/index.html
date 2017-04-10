@@ -1,0 +1,769 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="OpenStack,cloud-init," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="最近几天因为系统定制化的需求，集中研究了一下OpenStack的user_data的相关细节OpenStack虚拟机的用户客制化方法（User Data），上一遍博文最后提到了只成功测试了ubuntu的cloudimage，而自己用mirrors上下载的iso镜像创建image后即使安装了cloud-init这个包，也会出现诸如在OpenStackdashboard中创建虚拟机时所填的主机名并">
+<meta name="keywords" content="OpenStack,cloud-init">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user data">
+<meta property="og:url" content="http://lightthewoods.me/2012/10/31/OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user-data/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="最近几天因为系统定制化的需求，集中研究了一下OpenStack的user_data的相关细节OpenStack虚拟机的用户客制化方法（User Data），上一遍博文最后提到了只成功测试了ubuntu的cloudimage，而自己用mirrors上下载的iso镜像创建image后即使安装了cloud-init这个包，也会出现诸如在OpenStackdashboard中创建虚拟机时所填的主机名并">
+<meta property="og:updated_time" content="2016-01-20T04:31:49.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user data">
+<meta name="twitter:description" content="最近几天因为系统定制化的需求，集中研究了一下OpenStack的user_data的相关细节OpenStack虚拟机的用户客制化方法（User Data），上一遍博文最后提到了只成功测试了ubuntu的cloudimage，而自己用mirrors上下载的iso镜像创建image后即使安装了cloud-init这个包，也会出现诸如在OpenStackdashboard中创建虚拟机时所填的主机名并">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2012/10/31/OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user-data/"/>
+
+
+
+
+
+  <title> OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user data | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2012/10/31/OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user-data/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user data
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2012-10-31T11:26:13+08:00">
+                2012-10-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2012/10/31/OpenStack解决非UEC镜像的虚拟机cloud-init不工作不能自动修改主机名称不能注入user-data/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>　　最近几天因为系统定制化的需求，集中研究了一下OpenStack的user_data的相关细节OpenStack虚拟机的用户客制化方法（User Data），上一遍博文最后提到了只成功测试了ubuntu的cloudimage，而自己用mirrors上下载的iso镜像创建image后即使安装了cloud-init这个包，也会出现诸如在OpenStackdashboard中创建虚拟机时所填的主机名并未导入，user_data不可用等问题，查看cloud-init的log会显示。<br><a id="more"></a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">2012-10-30 14:57:43,189 - cloud-init[INFO]:cloud-init start running: Tue, 30 Oct 2012 06:57:43 +0000. up 6.99seconds</div><div class="line">2012-10-30 14:57:43,249 - __init__.py[DEBUG]: searching <span class="keyword">for</span> datasource <span class="keyword">in</span> [<span class="string">'DataSourceNoCloudNet'</span>, <span class="string">'DataSourceConfigDriveNet'</span>,<span class="string">'DataSourceOVFNet'</span>, <span class="string">'DataSourceMAAS'</span>]</div><div class="line">2012-10-30 14:57:43,269 - __init__.py[DEBUG]: Did not find datasource. searched classes: [<span class="string">'DataSourceNoCloudNet'</span>,<span class="string">'DataSourceConfigDriveNet'</span>, <span class="string">'DataSourceOVFNet'</span>,<span class="string">'DataSourceMAAS'</span>]</div></pre></td></tr></table></figure>
+<p>　　而正常的log应该会显示<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">2012-10-31 10:56:38,008 - cloud-init[INFO]: cloud-init startrunning: Wed, 31 Oct 2012 02:56:37 +0000. up 8.83 seconds</div><div class="line">2012-10-31 10:56:38,050 - __init__.py[DEBUG]: searching <span class="keyword">for</span> datasource <span class="keyword">in</span> [<span class="string">'DataSourceNoCloudNet'</span>, <span class="string">'DataSourceOVFNet'</span>,<span class="string">'DataSourceEc2'</span>]</div><div class="line">2012-10-31 10:56:53,270 - DataSourceEc2.py[DEBUG]: Using metadatasource: <span class="string">'http://169.254.169.254'</span></div><div class="line">2012-10-31 10:56:53,329 - DataSourceEc2.py[DEBUG]: crawl ofmetadata service took 0s</div><div class="line">2012-10-31 10:56:53,329 - __init__.py[DEBUG]: found data <span class="built_in">source</span>DataSourceEc2</div></pre></td></tr></table></figure></p>
+<p>　　日志显示找不到meadata source 169.254.169.254，这是一个内部的local source<br>昨晚在网上查找了大量资料，发现有关cloud-init的资料比较少，最后在rackspace的网站上发现了一份编辑镜像的代码，终于找到了方法。<br>　　按照OpenStack创建ubuntu镜像的官方文档，我们在安装系统后仅仅需要<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">sudo apt-get update</div><div class="line">sudo apt-get upgrade</div><div class="line">sudo apt-get install openssh-server cloud-init</div><div class="line"><span class="comment">#Remove the network persistence rules from /etc/udev/rules.das their presence will result in</span></div><div class="line"><span class="comment">#the network interface in the instance coming up as an interfaceother than eth0.</span></div><div class="line">sudo rm -rf /etc/udev/rules.d/70-persistent-net.rules</div></pre></td></tr></table></figure></p>
+<p>　　然后实际上cloud-init包的安装是需要配置的，配置方法为<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"cloud-init cloud-init/datasources string NoCloud, OVF,Ec2"</span> &gt;</div><div class="line">/tmp/debconf-selections</div><div class="line">/usr/bin/debconf-set-selections /tmp/debconf-selections</div><div class="line">rm <span class="_">-f</span> /tmp/debconf-selections</div><div class="line">apt-get -y install cloud-init</div></pre></td></tr></table></figure></p>
+<p>　　debconf-set-selections命令可以在包安装的时候对包进行必要的配置，配置参数NoCloud表示instance运行在一个简单的没有metadata服务的系统上，boot是后连接系统的local metadata source<a href="http://169.254.169.254:80。进行上述配置后，重新制作镜像，上述问题经试验一切正常。" target="_blank" rel="external">http://169.254.169.254:80。进行上述配置后，重新制作镜像，上述问题经试验一切正常。</a></p>
+<hr>
+<p>　　稍后可能在研究下CentOS和Fedora上的解决方法供大家参考。 </p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/OpenStack/" rel="tag"># OpenStack</a>
+          
+            <a href="/tags/cloud-init/" rel="tag"># cloud-init</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2013/01/31/OpenStack多节点部署（一）——-服务器选型/" rel="next" title="OpenStack多节点部署（一）—— 服务器选型">
+                <i class="fa fa-chevron-left"></i> OpenStack多节点部署（一）—— 服务器选型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2012/10/30/OpenStack虚拟机的用户客制化方法（User-Data）/" rel="prev" title="OpenStack虚拟机的用户客制化方法（User Data）">
+                OpenStack虚拟机的用户客制化方法（User Data） <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel sidebar-panel-active">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "abb18f73d61b4319b07352052b36d826",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
