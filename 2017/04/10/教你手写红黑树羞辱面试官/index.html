@@ -1,0 +1,813 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="算法,面试," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="之前在网上看过一个搞笑的关于面试的段子，说的是两个妹子A和B去某司面试前端开发岗位。A妹子又黑又矮，面试官说“写个二叉树查找”，瞬间写完，面试官又说“写个快速排序”，又秒写，”再写个红黑树的插入”，A妹子挠挠头，走了。B妹子生的明艳动人，面试官说“额，写个Hello World吧”，B妹子说，“我不会”，面试官喜笑颜开“没事没事，我来教你”。这个段子折射出一个问题，那就是在面试过程中手写红黑树很难">
+<meta name="keywords" content="算法,面试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="教你手写红黑树羞辱面试官">
+<meta property="og:url" content="http://lightthewoods.me/2017/04/10/教你手写红黑树羞辱面试官/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="之前在网上看过一个搞笑的关于面试的段子，说的是两个妹子A和B去某司面试前端开发岗位。A妹子又黑又矮，面试官说“写个二叉树查找”，瞬间写完，面试官又说“写个快速排序”，又秒写，”再写个红黑树的插入”，A妹子挠挠头，走了。B妹子生的明艳动人，面试官说“额，写个Hello World吧”，B妹子说，“我不会”，面试官喜笑颜开“没事没事，我来教你”。这个段子折射出一个问题，那就是在面试过程中手写红黑树很难">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/AVL%E6%A0%91%E4%B8%8D%E5%B9%B3%E8%A1%A1.png">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-02.png">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/AVL%E6%A0%91%E5%8F%8C%E6%97%8B%E8%BD%AC.png">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-05.png">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-06.png">
+<meta property="og:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-04.png">
+<meta property="og:updated_time" content="2017-04-12T02:36:24.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="教你手写红黑树羞辱面试官">
+<meta name="twitter:description" content="之前在网上看过一个搞笑的关于面试的段子，说的是两个妹子A和B去某司面试前端开发岗位。A妹子又黑又矮，面试官说“写个二叉树查找”，瞬间写完，面试官又说“写个快速排序”，又秒写，”再写个红黑树的插入”，A妹子挠挠头，走了。B妹子生的明艳动人，面试官说“额，写个Hello World吧”，B妹子说，“我不会”，面试官喜笑颜开“没事没事，我来教你”。这个段子折射出一个问题，那就是在面试过程中手写红黑树很难">
+<meta name="twitter:image" content="http://7xpwqp.com1.z0.glb.clouddn.com/AVL%E6%A0%91%E4%B8%8D%E5%B9%B3%E8%A1%A1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2017/04/10/教你手写红黑树羞辱面试官/"/>
+
+
+
+
+
+  <title> 教你手写红黑树羞辱面试官 | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2017/04/10/教你手写红黑树羞辱面试官/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                教你手写红黑树羞辱面试官
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-10T18:34:15+08:00">
+                2017-04-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2017/04/10/教你手写红黑树羞辱面试官/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>之前在网上看过一个搞笑的关于面试的段子，说的是两个妹子A和B去某司面试前端开发岗位。<br>A妹子又黑又矮，面试官说“写个二叉树查找”，瞬间写完，面试官又说“写个快速排序”，又秒写，”再写个红黑树的插入”，A妹子挠挠头，走了。<br>B妹子生的明艳动人，面试官说“额，写个Hello World吧”，B妹子说，“我不会”，面试官喜笑颜开“没事没事，我来教你”。<br>这个段子折射出一个问题，那就是在面试过程中手写红黑树很难，几乎是一个不可能完成的任务，所以网上才会有很多手写红黑树的段子。</p>
+<p>那么数据结构与算法中的红黑树真的很难吗？手写红黑树真的是Mission Impossible吗？其实红黑树并没有很难，算是数据结构中比较初级的算法，不能完整的将这个算法手写或者说手推下来（并不提倡默写），证明对算法的整个流程并没有完全的掌握，对算法的原理和意义一知半解，不是十分清晰。</p>
+<p>下面，将教你一步步掌握红黑树，万一我们长得不是那么“明艳动人”，也能凭借实例吊打面试官~</p>
+<h2 id="AVL树"><a href="#AVL树" class="headerlink" title="AVL树"></a>AVL树</h2><p>提到红黑树，首先要了解的是他的基础，<strong>AVL树</strong>。</p>
+<blockquote>
+<p>在计算机科学中，AVL树是最先发明的自平衡二叉查找树。在AVL树中任何节点的两个子树的高度最大差别为一，所以它也被称为高度平衡树。查找、插入和删除在平均和最坏情况下都是O（log n）。增加和删除可能需要通过一次或多次树旋转来重新平衡这个树。AVL树得名于它的发明者G.M. Adelson-Velsky和E.M. Landis，他们在1962年的论文《An algorithm for the organization of information》中发表了它。    —-维基百科</p>
+</blockquote>
+<p>AVL树是高度平衡树，任何节点的两个子树的高度差不能大于1。所以某一次的插入会破坏这个平衡，如下图所示。</p>
+<p><img src="http://7xpwqp.com1.z0.glb.clouddn.com/AVL%E6%A0%91%E4%B8%8D%E5%B9%B3%E8%A1%A1.png" alt="AVL不平衡"><br>一旦AVL树上的某次插入破坏了平衡，就需要通过旋转使之再次平衡。关于旋转，在很多算法书和博客上都有介绍，掌握重要的一点就是分为两个Case：新增节点是外侧插入还是内侧插入。如果是外侧出入，就做一次单旋转；如果是内次插入，需要做两次旋转，详细步骤这里就不罗列了，可以看下面的示意图。</p>
+<p><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-02.png" alt="AVL右旋转"><br><img src="http://7xpwqp.com1.z0.glb.clouddn.com/AVL%E6%A0%91%E5%8F%8C%E6%97%8B%E8%BD%AC.png" alt="AVL双旋转"></p>
+<h2 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h2><p>理解了AVL树的旋转，我们再来看红黑树。红黑树也是一种平衡树搜索树。它有几个特性：   </p>
+<ol>
+<li>节点是红色或黑色。</li>
+<li>根是黑色。</li>
+<li>所有叶子都是黑色（叶子是NIL节点）。</li>
+<li>每个红色节点必须有两个黑色的子节点。（从每个叶子到根的所有路径上不能有两个连续的红色节点。）</li>
+<li>从任一节点到其每个叶子的所有简单路径都包含相同数目的黑色节点。</li>
+</ol>
+<p>主要看4和5两点，这决定了红黑树什么时候像AVL树一样进行旋转，以及如何进行旋转。</p>
+<p><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-05.png" alt="红黑树提前旋转"><br>如上图所示，根据红黑树的性质，红黑树插入后的旋转发生在连续插入两个红色节点之后，与AVL树旋转的发生不同，在红黑树的性质下规范的旋转是为了预防平衡搜索树在某一条路径的插入频率过快儿导致高度不平衡，对比AVL树旋转的条件，可以理解为一种防微杜渐的预防措施。</p>
+<p><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-06.png" alt="红黑树case2"><br>红黑树的旋转在AVL树内侧插入和外侧插入两个case的基础上，有增加了一个变量，那就是插入节点叔父节点的颜色。如果叔父节点为黑色节点（或为null），那么旋转方法和AVL树的旋转方法大致相同。如果叔父节点为红色，在很多参考书目中我们看到其旋转方法为先旋转再染色，但是这种方法不利于将其转化为程序语言。根据红黑树的性质4和5，可以将祖父节点从黑色变为红色，再将父亲节点和叔父节点一次性变为黑色，这样就能满足路径上的黑色节点依然相等，且没有两个连续的红色节点。</p>
+<h2 id="算法实现"><a href="#算法实现" class="headerlink" title="算法实现"></a>算法实现</h2><p>下面我们准备开始手写红黑树，先从旋转函数开始写起。说起旋转，我们首先要明确一个概念——旋转点。旋转点的概念为我们以哪个节点为顶点进行旋转，一般选择旋转局部的顶点。</p>
+<p><img src="http://7xpwqp.com1.z0.glb.clouddn.com/2017-04-10-04.png" alt="红黑树右旋点"><br>如上图所示，右旋的旋转点为A<br>考虑到受众，这里使用群众喜闻乐见的JAVA<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//首先定义节点的数据结构</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> Color &#123;</div><div class="line">    RED, BLACK</div><div class="line">&#125;</div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TreeNode</span> </span>&#123;</div><div class="line">    <span class="keyword">private</span> TreeNode parent;</div><div class="line">    <span class="keyword">private</span> TreeNode left;</div><div class="line">    <span class="keyword">private</span> TreeNode right;</div><div class="line">    <span class="keyword">private</span> Color color;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> val;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> TreeNode <span class="title">getParent</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.parent;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setParent</span><span class="params">(TreeNode parent)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.parent = parent;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> TreeNode <span class="title">getLeft</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.left;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setLeft</span><span class="params">(TreeNode left)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.left = left;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> TreeNode <span class="title">getRight</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.right;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setRight</span><span class="params">(TreeNode right)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.right = right;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> TreeNode <span class="title">getColor</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.color;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setColor</span><span class="params">(Color color)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.color = color;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">//右旋函数</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">rotate_right</span><span class="params">(TreeNode x, TreeNode root)</span> </span>&#123;</div><div class="line">    TreeNode y = x.getLeft();</div><div class="line">    x.setLeft(y.getRight());</div><div class="line">    <span class="keyword">if</span>(y.getRight() != Null) &#123;</div><div class="line">        y.getRight().setParrent(x);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">/**</span></div><div class="line">    * 注意要判断边界条件，如果祖父节点是root</div><div class="line">    * 还要注意插入节点在左边和右边两种镜面的情况</div><div class="line">    **/</div><div class="line">    <span class="keyword">if</span>(x == root) &#123;</div><div class="line">        root = y;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(x == x.getParrent().getLeft()) &#123;</div><div class="line">        x.getParrent().setLeft(y);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span> &#123;</div><div class="line">        x.getParrent().setRight(y);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    y.setParrent(x.getParrent());</div><div class="line">    x.setParrent(y);</div><div class="line">    y.setRight(x);</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="comment">//左旋函数</span></div><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">rotate_left</span><span class="params">(TreeNode x, TreeNode root)</span> </span>&#123;</div><div class="line">    TreeNode y = x.getRight();</div><div class="line">    x.setRight(y.getLeft());</div><div class="line">    <span class="keyword">if</span>(y.getLeft() != Null) &#123;</div><div class="line">        y.getLeft().setParrent(x);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(x == root) &#123;</div><div class="line">        root = y;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(x == x.getParrent().getLeft()) &#123;</div><div class="line">        x.getParrent().setLeft(y);</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">else</span> &#123;</div><div class="line">        x.getParrent().setRight(y);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    y.setParrent(x.getParrent());</div><div class="line">    x.setParrent(y);</div><div class="line">    y.setLeft(x);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>下面写调整函数，这是一个从插入点开始的自底向上的过程，因为在红黑树的case2，父亲节点和叔父节点都为红色的情况下，我们需要将祖父节点变红，这样有可能会碰到祖父节点的父亲节点也为红色的情况，需要以祖父节点为新的插入节点，继续向上迭代的调整红黑树。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">rebalance_tree</span><span class="params">(TreeNode x, TreeNode root)</span> </span>&#123;</div><div class="line">    <span class="keyword">while</span>(x.getParrent().getColor()==Color.RED &amp;&amp; x.getParrent() != root) &#123;</div><div class="line">        <span class="comment">//插入节点的父亲节点在左侧</span></div><div class="line">        <span class="keyword">if</span>(x.getParrent().getParrent().getLeft()==x.getParrrent()) &#123;</div><div class="line">            TreeNode y = x.getParrent().getParrent().getRight(); <span class="comment">//领y为叔父节点</span></div><div class="line">            <span class="keyword">if</span>(y!=Null &amp;&amp; y.getColor()==Color.RED) &#123; <span class="comment">//叔父节点y为红色</span></div><div class="line">                y.getParrent().setColor(Color.RED);</div><div class="line">                x.getParrent().setColor(Color.BLACK);</div><div class="line">                y.setColor(Color.BLACK);</div><div class="line">                x = x.getParrent().getParrent();</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">else</span> &#123; <span class="comment">//叔父节点为空或为黑色</span></div><div class="line">                <span class="keyword">if</span>(x==x.getParrent().getRight()) &#123; <span class="comment">//插入节点为内侧插入</span></div><div class="line">                    x = x.getParrent();</div><div class="line">                    rotate_left(x, root);</div><div class="line">                &#125;</div><div class="line">                x.getParrent().getParrent().setColor(Color.RED);</div><div class="line">                x.getParrent().setColor(Color.BLACK);</div><div class="line">                rotate_right(x.getParrent().getParrent(), root);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="comment">//插入节点的父亲节点在右侧</span></div><div class="line">        <span class="keyword">else</span> &#123;</div><div class="line">            TreeNode y = x.getParrent().getParrent().getLeft(); <span class="comment">//另y为叔父节点</span></div><div class="line">            <span class="keyword">if</span>(y!=Null &amp;&amp; y.getColor()==Color.RED) &#123; <span class="comment">//叔父节点为红色</span></div><div class="line">                y.getParrent().setColor(Color.RED);</div><div class="line">                x.getParrent().setColor(Color.BLACK);</div><div class="line">                y.setColor(Color.BLACK);</div><div class="line">                x = x.getParrent().getParrent();</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">else</span> &#123; <span class="comment">//叔父节点为空或为黑色</span></div><div class="line">                <span class="keyword">if</span>(x==x.getParrent().getLeft()) &#123; <span class="comment">//插入节点为内侧插入</span></div><div class="line">                    x = x.getParrent();</div><div class="line">                    rotate_right(x, root);</div><div class="line">                &#125;</div><div class="line">                x.getParrent().getParrent().setColor(Color.RED);</div><div class="line">                x.getParrent().setColor(Color.BLACK);</div><div class="line">                rotate_left(x.getParrent().getParrent(), root);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+            <a href="/tags/面试/" rel="tag"># 面试</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/05/23/终端命令行操作系统剪切板/" rel="prev" title="使用终端命令行控制剪贴板">
+                使用终端命令行控制剪贴板 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">24</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#AVL树"><span class="nav-number">1.</span> <span class="nav-text">AVL树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#红黑树"><span class="nav-number">2.</span> <span class="nav-text">红黑树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#算法实现"><span class="nav-number">3.</span> <span class="nav-text">算法实现</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "abb18f73d61b4319b07352052b36d826",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
