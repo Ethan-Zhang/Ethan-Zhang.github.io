@@ -287,6 +287,144 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2017/04/25/index-data-structure-besides-books/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/04/25/index-data-structure-besides-books/" itemprop="url">
+                  课本之外的数据结构与算法
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-25T13:25:08+08:00">
+                2017-04-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>上一篇中（教你手写红黑树），我们介绍了算法书上常见的自平衡树——红黑树。今天我们再介绍一种书本上不常见，但是在业内广泛使用的索引数据结构——跳跃表（SkipList）。<br>跳跃表，或叫跳表，是一种随机化的数据结构，基于并联的链表，实现简单，插入、删除、查找的复杂度均为O(logN)。<br>SkipList在学校教材中的算法书和课程中出现的频率不高，猜测有一下几个原因：</p>
+<ol>
+<li>算法发明的时间较晚。SkipList的Paper首次发表于1990年，而红黑树1978年，AVL树1962年。。。可能还没来得及编进教材。</li>
+<li>算法设计和实现比较简单。因为太简单了，可能老师们觉得不值得花一节课的时间去讲，学生应该去自学。。。<br>不同于红黑树各类旋转和增删操作的复杂，SkipList在设计思想和代码实现上都简单的超乎你的想象。但是，大道至简，是任何优美结构设计追求的中级目标。<h2 id="从单链表到跳表"><a href="#从单链表到跳表" class="headerlink" title="从单链表到跳表"></a>从单链表到跳表</h2>来看一个有序链表(这里H表示链表头部，T表示链表尾部，不是有效节点)：<br>/////TODO：单链表图<br>假设我们要查找7，只能老老实实地按照1-&gt;2-&gt;3-&gt;…的顺序走，忍受O(n)的效率；但如果是数组的话，可以使用二分查找达到O(lgn)。<br>可以在链表中使用二分查找吗？<br>不可以，因为二分查找需要用到中间位置的节点，而链表不能随机访问。<br>那么就把中间位置的节点单独保存吧。<br>/////TODO:单链表带中间指针<br>原来的链表写成了三个链表，记从下到上的编号为0、1、2，可以发现0号链表就是原始链表，1号链表是原始链表四等分点，2号链表是原始链表的二等分点。<br>我们再来查找7，初始搜索范围为(H, T)：</li>
+</ol>
+<ul>
+<li>在2号链表中与4比较，7&gt;4，更新搜索范围为(4, T)</li>
+<li>在1号链表中与6比较，7&gt;6，更新搜索范围为(6, T)</li>
+<li>在0号链表中与7比较，7=7，查找成功。<br>形象化地说，SkipList就是额外保存了二分查找的中间信息。不过SkipList中含有随机化，生成的结构不会像上面那样完美，来看实际生成的一个SkipList：<br>之后会详细讨论随机化的问题，现在先承上启下地梳理下信息：<br>SkipList结合了链表和二分查找的思想<br>将原始链表和一些通过“跳跃”生成的链表组成层<br>第0层是原始链表，越上层“跳跃”的步距越大，链表元素越少<br>上层链表是下层链表的子序列<br>查找时从顶层向下，不断缩小搜索范围<h2 id="与红黑树、哈希表比较"><a href="#与红黑树、哈希表比较" class="headerlink" title="与红黑树、哈希表比较"></a>与红黑树、哈希表比较</h2></li>
+<li>skiplist和各种平衡树（如AVL、红黑树等）的元素是有序排列的，而哈希表不是有序的。因此，在哈希表上只能做单个key的查找，不适宜做范围查找。所谓范围查找，指的是查找那些大小在指定的两个值之间的所有节点。</li>
+<li>在做范围查找的时候，平衡树比skiplist操作要复杂。在平衡树上，我们找到指定范围的小值之后，还需要以中序遍历的顺序继续寻找其它不超过大值的节点。如果不对平衡树进行一定的改造，这里的中序遍历并不容易实现。而在skiplist上进行范围查找就非常简单，只需要在找到小值之后，对第1层链表进行若干步的遍历就可以实现。</li>
+<li>平衡树的插入和删除操作可能引发子树的调整，逻辑复杂，而skiplist的插入和删除只需要修改相邻节点的指针，操作简单又快速。</li>
+<li>从内存占用上来说，skiplist比平衡树更灵活一些。一般来说，平衡树每个节点包含2个指针（分别指向左右子树），而skiplist每个节点包含的指针数目平均为1/(1-p)，具体取决于参数p的大小。如果像Redis里的实现一样，取p=1/4，那么平均每个节点包含1.33个指针，比平衡树更有优势。</li>
+<li>查找单个key，skiplist和平衡树的时间复杂度都为O(log n)，大体相当；而哈希表在保持较低的哈希值冲突概率的前提下，查找时间复杂度接近O(1)，性能更高一些。所以我们平常使用的各种Map或dictionary结构，大都是基于哈希表实现的。</li>
+<li>从算法实现难度上来比较，skiplist比平衡树要简单得多。</li>
+<li>因为算法设计简单，便于在其基础上设计出一些无锁的数据结构。</li>
+</ul>
+<p>未完成。。。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2017/04/18/From-Linux-FS-to-Hadoop-hdfs/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2079,136 +2217,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2013/11/18/Python多进程log日志切分错误的解决方案/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Ethan Zhang">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="林中小灯">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2013/11/18/Python多进程log日志切分错误的解决方案/" itemprop="url">
-                  Python多进程log日志切分错误的解决方案
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2013-11-18T16:34:42+08:00">
-                2013-11-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>　　在生产环境中，log一般按照时间进行切分，如在23:59:59切分一天的日志，以便进行分析。在python中常用内建的logging模块实现。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">logger = logging.getLogger()</div><div class="line">logger.setLevel(logging.DEBUG)   </div><div class="line">log_file = <span class="string">'tornadolog.log'</span></div><div class="line">timelog = timelog = logging.handlers.TimedRotatingFileHandler(log_file,</div><div class="line">                                                            <span class="string">'midnight'</span>,</div><div class="line">                                                            <span class="number">1</span>, <span class="number">0</span>)</div><div class="line">logger.addHandler(timelog)</div><div class="line"></div><div class="line">logger.info(<span class="string">'Hello log'</span>)</div></pre></td></tr></table></figure></p>
-<p>　　但是，像tornado这种推荐进行多进程部署的框架，在类似的日志切分上会发生错误，原因是单个的日志文件作为进程间的共享资源，当其中一个进程进行日志切分的时候，实际上是将原来的日志文件改名，然后新建一个日志文件，文件操作描述符fd发生了改变，其它的进程不知道这个操作，再次写入日志的时候因为找不到新的文件描述符发生异常。<br>解决方法也很简单，我们可以是每个tornado进程都有一个自己的日志文件，通过进程的task_id进行区分，避免进程间共享资源的操作。<br><figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># Copyright 2012 Ethan Zhang&lt;http://github.com/Ethan-Zhang&gt;</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># Licensed under the Apache License, Version 2.0 (the "License"); you may</span></div><div class="line"><span class="comment"># not use this file except in compliance with the License. You may obtain</span></div><div class="line"><span class="comment"># a copy of the License at</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#     http://www.apache.org/licenses/LICENSE-2.0</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># Unless required by applicable law or agreed to in writing, software</span></div><div class="line"><span class="comment"># distributed under the License is distributed on an "AS IS" BASIS, WITHOUT</span></div><div class="line"><span class="comment"># WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the                                                    </span></div><div class="line"><span class="comment"># License for the specific language governing permissions and limitations</span></div><div class="line"><span class="comment"># under the License.</span></div><div class="line"></div><div class="line"></div><div class="line"><span class="keyword">import</span> signal                                                                                                                 </div><div class="line"><span class="keyword">import</span> os                                                                                                                     </div><div class="line"><span class="keyword">import</span> logging                                                                                                                </div><div class="line"><span class="keyword">import</span> logging.handlers                                                                                                       </div><div class="line"></div><div class="line"><span class="keyword">import</span> tornado</div><div class="line"><span class="keyword">import</span> tornado.netutil                                                                                                        </div><div class="line"><span class="keyword">import</span> tornado.process                                                                                                        </div><div class="line"><span class="keyword">from</span> tornado.ioloop <span class="keyword">import</span> IOLoop                                                                                             </div><div class="line"><span class="keyword">from</span> tornado.httpserver <span class="keyword">import</span> HTTPServer                                                                                     </div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">handle_request</span><span class="params">(request)</span>:</span></div><div class="line">    message = <span class="string">"You requested %s\n"</span> % request.uri                                                                              </div><div class="line">    request.write(<span class="string">"HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s"</span> % (                                                       </div><div class="line">                               len(message), message))</div><div class="line">    request.finish()</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">kill_server</span><span class="params">(sig, frame)</span>:</span></div><div class="line"></div><div class="line">    IOLoop.instance().stop()</div><div class="line"></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">main</span><span class="params">()</span>:</span></div><div class="line"></div><div class="line">    signal.signal(signal.SIGPIPE, signal.SIG_IGN);</div><div class="line">    signal.signal(signal.SIGINT, kill_server)</div><div class="line">    signal.signal(signal.SIGQUIT, kill_server)</div><div class="line">    signal.signal(signal.SIGTERM, kill_server)</div><div class="line">    signal.signal(signal.SIGHUP, kill_server)</div><div class="line"></div><div class="line">    sockets = tornado.netutil.bind_sockets(<span class="number">9204</span>)</div><div class="line">    task_id = tornado.process.fork_processes(<span class="number">2</span>)</div><div class="line">    <span class="comment">#task_id为fork_processes返回的子进程编号</span></div><div class="line"></div><div class="line">    logger = logging.getLogger()</div><div class="line">    logger.setLevel(logging.DEBUG)</div><div class="line">    log_file = <span class="string">'tornadolog.log.%d'</span> % (task_id)</div><div class="line">    <span class="comment">#以子进程编号命名自己的log文件名</span></div><div class="line">    timelog = timelog = logging.handlers.TimedRotatingFileHandler(log_file,</div><div class="line">                                                                <span class="string">'midnight'</span>,</div><div class="line">                                                                <span class="number">1</span>, <span class="number">0</span>)</div><div class="line">    logger.addHandler(timelog)</div><div class="line"></div><div class="line">    server = HTTPServer(handle_request)</div><div class="line">    server.add_sockets(sockets)</div><div class="line"></div><div class="line">    logger.info(<span class="string">'Server Starting...'</span>)</div><div class="line"></div><div class="line">    IOLoop.instance().start()</div><div class="line">    server.stop()</div><div class="line">    IOLoop.instance().stop()</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    main()</div></pre></td></tr></table></figure></p>
-<hr>
-<p><strong>2013-11-25新增</strong></p>
-<hr>
-<p>　　其实我们分析Python的内建库logging的源码就能发现问题<br>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2013/11/18/Python多进程log日志切分错误的解决方案/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2258,7 +2266,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-count">26</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
