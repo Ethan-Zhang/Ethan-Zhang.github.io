@@ -71,7 +71,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Tornado,Python,日志切分," />
+  <meta name="keywords" content="Python,Tornado,日志切分," />
 
 
 
@@ -90,7 +90,7 @@
 
 
 <meta name="description" content="在生产环境中，log一般按照时间进行切分，如在23:59:59切分一天的日志，以便进行分析。在python中常用内建的logging模块实现。123456789logger = logging.getLogger()logger.setLevel(logging.DEBUG)   log_file = &apos;tornadolog.log&apos;timelog = timelog = logging.ha">
-<meta name="keywords" content="Tornado,Python,日志切分">
+<meta name="keywords" content="Python,Tornado,日志切分">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Python多进程log日志切分错误的解决方案">
 <meta property="og:url" content="http://lightthewoods.me/2013/11/18/Python多进程log日志切分错误的解决方案/index.html">
@@ -342,8 +342,9 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a class="cloud-tie-join-count" href="/2013/11/18/Python多进程log日志切分错误的解决方案/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                <a href="/2013/11/18/Python多进程log日志切分错误的解决方案/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2013/11/18/Python多进程log日志切分错误的解决方案/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -427,9 +428,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/Tornado/" rel="tag"># Tornado</a>
-          
             <a href="/tags/Python/" rel="tag"># Python</a>
+          
+            <a href="/tags/Tornado/" rel="tag"># Tornado</a>
           
             <a href="/tags/日志切分/" rel="tag"># 日志切分</a>
           
@@ -505,7 +506,12 @@
           
   <div class="comments" id="comments">
     
-      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
     
   </div>
 
@@ -753,6 +759,26 @@
 
   
 
+    
+      <script id="dsq-count-scr" src="https://ethan1985.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://lightthewoods.me/2013/11/18/Python多进程log日志切分错误的解决方案/';
+          this.page.identifier = '2013/11/18/Python多进程log日志切分错误的解决方案/';
+          this.page.title = 'Python多进程log日志切分错误的解决方案';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://ethan1985.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
 
 
 
@@ -763,21 +789,18 @@
 
 
   
-    
-    <script>
-      var cloudTieConfig = {
-        url: document.location.href, 
-        sourceId: "",
-        productKey: "abb18f73d61b4319b07352052b36d826",
-        target: "cloud-tie-wrapper"
-      };
-    </script>
-    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+
+
+
+
+
   
 
 
 
 
+
+  
 
 
 

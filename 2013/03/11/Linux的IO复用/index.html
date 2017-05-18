@@ -71,7 +71,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="IO复用,LINUX,高并发," />
+  <meta name="keywords" content="LINUX,IO复用,高并发," />
 
 
 
@@ -90,7 +90,7 @@
 
 
 <meta name="description" content="首先我们来定义流的概念，一个流可以是文件，socket，pipe等等可以进行I/O操作的内核对象。不管是文件，还是套接字，还是管道，我们都可以把他们看作流。">
-<meta name="keywords" content="IO复用,LINUX,高并发">
+<meta name="keywords" content="LINUX,IO复用,高并发">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux的IO复用">
 <meta property="og:url" content="http://lightthewoods.me/2013/03/11/Linux的IO复用/index.html">
@@ -342,8 +342,9 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a class="cloud-tie-join-count" href="/2013/03/11/Linux的IO复用/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                <a href="/2013/03/11/Linux的IO复用/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2013/03/11/Linux的IO复用/" itemprop="commentCount"></span>
                 </a>
               </span>
             
@@ -407,9 +408,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/IO复用/" rel="tag"># IO复用</a>
-          
             <a href="/tags/LINUX/" rel="tag"># LINUX</a>
+          
+            <a href="/tags/IO复用/" rel="tag"># IO复用</a>
           
             <a href="/tags/高并发/" rel="tag"># 高并发</a>
           
@@ -485,7 +486,12 @@
           
   <div class="comments" id="comments">
     
-      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
     
   </div>
 
@@ -733,6 +739,26 @@
 
   
 
+    
+      <script id="dsq-count-scr" src="https://ethan1985.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://lightthewoods.me/2013/03/11/Linux的IO复用/';
+          this.page.identifier = '2013/03/11/Linux的IO复用/';
+          this.page.title = 'Linux的IO复用';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://ethan1985.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
 
 
 
@@ -743,21 +769,18 @@
 
 
   
-    
-    <script>
-      var cloudTieConfig = {
-        url: document.location.href, 
-        sourceId: "",
-        productKey: "abb18f73d61b4319b07352052b36d826",
-        target: "cloud-tie-wrapper"
-      };
-    </script>
-    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+
+
+
+
+
   
 
 
 
 
+
+  
 
 
 
