@@ -1,0 +1,883 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Light, Woods" />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="林中小灯" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="周末参加了Apache RocketMQ Meetup北京站的活动，会上有阿里的同学分享了RocketMQ在性能调优实践中的一些宝贵的经验和知识。在后面的QA环节，有位同学想请嘉宾分享一下性能优化怎么做，或者从哪些方面入手。其实我特别能理解他的感受，想在程序性能优化发面做一些探索，但是又不知道从何入手。根据会上嘉宾所讲的经验和知识点，结合我自己之前的一些笔记，我列了一个性能优化的Note在Git上">
+<meta name="keywords">
+<meta property="og:type" content="article">
+<meta property="og:title" content="性能优化笔记">
+<meta property="og:url" content="http://lightthewoods.me/2017/07/03/Performance-Optimization-Note/index.html">
+<meta property="og:site_name" content="林中小灯">
+<meta property="og:description" content="周末参加了Apache RocketMQ Meetup北京站的活动，会上有阿里的同学分享了RocketMQ在性能调优实践中的一些宝贵的经验和知识。在后面的QA环节，有位同学想请嘉宾分享一下性能优化怎么做，或者从哪些方面入手。其实我特别能理解他的感受，想在程序性能优化发面做一些探索，但是又不知道从何入手。根据会上嘉宾所讲的经验和知识点，结合我自己之前的一些笔记，我列了一个性能优化的Note在Git上">
+<meta property="og:image" content="http://static.oschina.net/uploads/space/2014/0108/104700_qc4H_859646.png">
+<meta property="og:image" content="http://static.oschina.net/uploads/space/2014/0108/104957_UW6E_859646.png">
+<meta property="og:updated_time" content="2017-07-03T05:31:12.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="性能优化笔记">
+<meta name="twitter:description" content="周末参加了Apache RocketMQ Meetup北京站的活动，会上有阿里的同学分享了RocketMQ在性能调优实践中的一些宝贵的经验和知识。在后面的QA环节，有位同学想请嘉宾分享一下性能优化怎么做，或者从哪些方面入手。其实我特别能理解他的感受，想在程序性能优化发面做一些探索，但是又不知道从何入手。根据会上嘉宾所讲的经验和知识点，结合我自己之前的一些笔记，我列了一个性能优化的Note在Git上">
+<meta name="twitter:image" content="http://static.oschina.net/uploads/space/2014/0108/104700_qc4H_859646.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lightthewoods.me/2017/07/03/Performance-Optimization-Note/"/>
+
+
+
+
+
+  <title> 性能优化笔记 | 林中小灯 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-97204025-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?33c8066a182d569550ea355708fe9061";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261711358&web_id=1261711358" language="JavaScript"></script>
+  </div>
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">林中小灯</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Light the woods</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lightthewoods.me/2017/07/03/Performance-Optimization-Note/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ethan Zhang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="林中小灯">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                性能优化笔记
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-03T11:40:29+08:00">
+                2017-07-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/07/03/Performance-Optimization-Note/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/07/03/Performance-Optimization-Note/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv"><i class="fa fa-file-o"></i>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>周末参加了Apache RocketMQ Meetup北京站的活动，会上有阿里的同学分享了RocketMQ在性能调优实践中的一些宝贵的经验和知识。在后面的QA环节，有位同学想请嘉宾分享一下性能优化怎么做，或者从哪些方面入手。其实我特别能理解他的感受，想在程序性能优化发面做一些探索，但是又不知道从何入手。<br>根据会上嘉宾所讲的经验和知识点，结合我自己之前的一些笔记，我列了一个性能优化的Note在Git上。因为我自己在这方便经验也不多，而且一些知识点没有记全，欢迎大家在Git上提PR进行补充，多谢~</p>
+<h1 id="CPU"><a href="#CPU" class="headerlink" title="CPU"></a>CPU</h1><h2 id="指定进程或线程运行的CPU"><a href="#指定进程或线程运行的CPU" class="headerlink" title="指定进程或线程运行的CPU"></a>指定进程或线程运行的CPU</h2><p>通过Linux命令或系统API，将运行中的某个进程/线程绑定到指定的CPU</p>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ol>
+<li>减少重要进程/线程的切换</li>
+<li>提高CPU Cache的命中率</li>
+</ol>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><h3 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h3><ol>
+<li>taskset命令   </li>
+<li>numactl命令</li>
+<li>sched_setaffinity系统API</li>
+</ol>
+<a id="more"></a>
+<h3 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h3><h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="http://www.cnblogs.com/liuhao/archive/2012/06/21/2558069.html" target="_blank" rel="external">http://www.cnblogs.com/liuhao/archive/2012/06/21/2558069.html</a><br><a href="http://www.cnblogs.com/highway-9/p/5494977.html" target="_blank" rel="external">http://www.cnblogs.com/highway-9/p/5494977.html</a><br><a href="http://coolshell.cn/articles/7490.html" target="_blank" rel="external">http://coolshell.cn/articles/7490.html</a></p>
+<h1 id="内存"><a href="#内存" class="headerlink" title="内存"></a>内存</h1><h2 id="预分配"><a href="#预分配" class="headerlink" title="预分配"></a>预分配</h2><p>分配内存时刻早于程序需要的时间或分配内存的容量超过程序某次实际需要的大小</p>
+<h3 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h3><h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><h3 id="适用场景-1"><a href="#适用场景-1" class="headerlink" title="适用场景"></a>适用场景</h3><h3 id="参考-1"><a href="#参考-1" class="headerlink" title="参考"></a>参考</h3><h2 id="锁定"><a href="#锁定" class="headerlink" title="锁定"></a>锁定</h2><p>通过mlock等系统调用，允许程序在物理内存上锁住它的部分或全部地址空间，阻止Linux操作系统将这些被锁住的页换出。</p>
+<h3 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h3><ol>
+<li>减少内存页面的调入调出带来的延迟</li>
+<li>防止内存中敏感数据的泄露</li>
+</ol>
+<h3 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h3><ol>
+<li>操作系统可用内存减少，易宕机</li>
+</ol>
+<h3 id="适用场景-2"><a href="#适用场景-2" class="headerlink" title="适用场景"></a>适用场景</h3><h3 id="参考-2"><a href="#参考-2" class="headerlink" title="参考"></a>参考</h3><p><a href="http://www.cnblogs.com/sky-heaven/p/7019977.html" target="_blank" rel="external">http://www.cnblogs.com/sky-heaven/p/7019977.html</a></p>
+<h2 id="Huge-Page"><a href="#Huge-Page" class="headerlink" title="Huge Page"></a>Huge Page</h2><p>Linux标准内存页的大小为4KB，通过设置Huge Page，可以允许程序使用</p>
+<h3 id="优点-3"><a href="#优点-3" class="headerlink" title="优点"></a>优点</h3><ol>
+<li>减少操作系统访问内存页表TLB的开销</li>
+<li>减少内存页换入换出的延迟</li>
+</ol>
+<h3 id="缺点-3"><a href="#缺点-3" class="headerlink" title="缺点"></a>缺点</h3><ol>
+<li>由于内存页page size增大，多CPU写同一个内存页容易冲突（加锁）</li>
+</ol>
+<h3 id="适用场景-3"><a href="#适用场景-3" class="headerlink" title="适用场景"></a>适用场景</h3><p>对于大量热点内存数据比较有效果，但是会造成多CPU写同一块page的冲突，一般像MongoDB这类采用多线程随机读写的数据库都要求关闭huge page。如果是单线程的程序，因为减少了多CPU的写冲突，可以利用到Huge Page的特性。</p>
+<h3 id="参考-3"><a href="#参考-3" class="headerlink" title="参考"></a>参考</h3><p><a href="http://hsbxxl.blog.51cto.com/181620/1075166" target="_blank" rel="external">http://hsbxxl.blog.51cto.com/181620/1075166</a><br><a href="http://cenalulu.github.io/linux/huge-page-on-numa/" target="_blank" rel="external">http://cenalulu.github.io/linux/huge-page-on-numa/</a></p>
+<h1 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h1><h2 id="Zero-Copy"><a href="#Zero-Copy" class="headerlink" title="Zero Copy"></a>Zero Copy</h2><p>“零拷贝”是指计算机操作的过程中，CPU不需要为数据在内存之间的拷贝消耗资源。而它通常是指计算机在网络上发送文件时，不需要将文件内容拷贝到用户空间（User Space）而直接在内核空间（Kernel Space）中传输到网络的方式。<br>Zero Copy的模式中，避免了数据在用户空间和内存空间之间的拷贝，从而提高了系统的整体性能。Linux中的sendfile()以及Java NIO中的FileChannel.transferTo()方法都实现了零拷贝的功能，而在Netty中也通过在FileRegion中包装了NIO的FileChannel.transferTo()方法实现了零拷贝。<br><img src="http://static.oschina.net/uploads/space/2014/0108/104700_qc4H_859646.png" alt="normal"><br><img src="http://static.oschina.net/uploads/space/2014/0108/104957_UW6E_859646.png" alt="Zero-Copy"></p>
+<h3 id="优点-4"><a href="#优点-4" class="headerlink" title="优点"></a>优点</h3><ol>
+<li>避免数据在用户态空间和内核态空间之间的拷贝</li>
+</ol>
+<h3 id="缺点-4"><a href="#缺点-4" class="headerlink" title="缺点"></a>缺点</h3><ol>
+<li>不同于常用socket的read、write调用，使用sendfile调用，需要重写底层网络库的代码。（目前已经有许多框架实现，如Netty）</li>
+</ol>
+<h2 id="Non-Blocking"><a href="#Non-Blocking" class="headerlink" title="Non-Blocking"></a>Non-Blocking</h2><h1 id="磁盘"><a href="#磁盘" class="headerlink" title="磁盘"></a>磁盘</h1><h2 id="使用Ext4或xfs文件系统"><a href="#使用Ext4或xfs文件系统" class="headerlink" title="使用Ext4或xfs文件系统"></a>使用Ext4或xfs文件系统</h2><p>如运维可以支持，建议将生产系统的操作系统尽量升级至高版本以支持ext4或xfs等新的文件系统。</p>
+<h3 id="优点（以Ext4为例）"><a href="#优点（以Ext4为例）" class="headerlink" title="优点（以Ext4为例）"></a>优点（以Ext4为例）</h3><ol>
+<li>更大的inode</li>
+<li>快速fsck（inode表中增加未使用inode表）</li>
+<li>引入Extends。可以分配连续的Block，提高大文件的写入效率</li>
+<li>多块分配</li>
+<li>延迟分配</li>
+</ol>
+<h3 id="参考-4"><a href="#参考-4" class="headerlink" title="参考"></a>参考</h3><p><a href="http://misujun.blog.51cto.com/2595192/883949" target="_blank" rel="external">http://misujun.blog.51cto.com/2595192/883949</a></p>
+<h1 id="JVM调优"><a href="#JVM调优" class="headerlink" title="JVM调优"></a>JVM调优</h1><h2 id="管理JVM堆外内存"><a href="#管理JVM堆外内存" class="headerlink" title="管理JVM堆外内存"></a>管理JVM堆外内存</h2><p>通过sun.misc.unsafe管理JVM的堆外内存。不使用JVM的垃圾回收而手动管理内存数据。具体可参见flink中的实现。</p>
+<h3 id="优点-5"><a href="#优点-5" class="headerlink" title="优点"></a>优点</h3><h3 id="缺点-5"><a href="#缺点-5" class="headerlink" title="缺点"></a>缺点</h3><h3 id="适用场景-4"><a href="#适用场景-4" class="headerlink" title="适用场景"></a>适用场景</h3><ol>
+<li>Flink</li>
+</ol>
+<h3 id="参考-5"><a href="#参考-5" class="headerlink" title="参考"></a>参考</h3><p><a href="http://www.cnblogs.com/mickole/articles/3757278.html" target="_blank" rel="external">http://www.cnblogs.com/mickole/articles/3757278.html</a><br><a href="http://wuchong.me/blog/2016/04/29/flink-internals-memory-manage/" target="_blank" rel="external">http://wuchong.me/blog/2016/04/29/flink-internals-memory-manage/</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/04/25/index-data-structure-besides-books/" rel="prev" title="课本之外的索引结构——SkipList">
+                课本之外的索引结构——SkipList <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="http://7xpwqp.com1.z0.glb.clouddn.com/avatar_01.jpg"
+               alt="Ethan Zhang" />
+          <p class="site-author-name" itemprop="name">Ethan Zhang</p>
+           
+              <p class="site-description motion-element" itemprop="description">个人技术博客分享</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">27</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">29</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/ethan-zhang" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/1920663143" target="_blank" title="微博">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-block">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://timd.cn/" title="蒂米" target="_blank">蒂米</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CPU"><span class="nav-number">1.</span> <span class="nav-text">CPU</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#指定进程或线程运行的CPU"><span class="nav-number">1.1.</span> <span class="nav-text">指定进程或线程运行的CPU</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点"><span class="nav-number">1.1.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点"><span class="nav-number">1.1.2.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#方法"><span class="nav-number">1.1.3.</span> <span class="nav-text">方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#适用场景"><span class="nav-number">1.1.4.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">1.1.5.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存"><span class="nav-number">2.</span> <span class="nav-text">内存</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#预分配"><span class="nav-number">2.1.</span> <span class="nav-text">预分配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点-1"><span class="nav-number">2.1.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点-1"><span class="nav-number">2.1.2.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#适用场景-1"><span class="nav-number">2.1.3.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-1"><span class="nav-number">2.1.4.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#锁定"><span class="nav-number">2.2.</span> <span class="nav-text">锁定</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点-2"><span class="nav-number">2.2.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点-2"><span class="nav-number">2.2.2.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#适用场景-2"><span class="nav-number">2.2.3.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-2"><span class="nav-number">2.2.4.</span> <span class="nav-text">参考</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Huge-Page"><span class="nav-number">2.3.</span> <span class="nav-text">Huge Page</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点-3"><span class="nav-number">2.3.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点-3"><span class="nav-number">2.3.2.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#适用场景-3"><span class="nav-number">2.3.3.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-3"><span class="nav-number">2.3.4.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#网络"><span class="nav-number">3.</span> <span class="nav-text">网络</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Zero-Copy"><span class="nav-number">3.1.</span> <span class="nav-text">Zero Copy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点-4"><span class="nav-number">3.1.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点-4"><span class="nav-number">3.1.2.</span> <span class="nav-text">缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Non-Blocking"><span class="nav-number">3.2.</span> <span class="nav-text">Non-Blocking</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#磁盘"><span class="nav-number">4.</span> <span class="nav-text">磁盘</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用Ext4或xfs文件系统"><span class="nav-number">4.1.</span> <span class="nav-text">使用Ext4或xfs文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点（以Ext4为例）"><span class="nav-number">4.1.1.</span> <span class="nav-text">优点（以Ext4为例）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-4"><span class="nav-number">4.1.2.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JVM调优"><span class="nav-number">5.</span> <span class="nav-text">JVM调优</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#管理JVM堆外内存"><span class="nav-number">5.1.</span> <span class="nav-text">管理JVM堆外内存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#优点-5"><span class="nav-number">5.1.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缺点-5"><span class="nav-number">5.1.2.</span> <span class="nav-text">缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#适用场景-4"><span class="nav-number">5.1.3.</span> <span class="nav-text">适用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考-5"><span class="nav-number">5.1.4.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2012 - 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ethan Zhang</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://http-lightthewoods-me.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://lightthewoods.me/2017/07/03/Performance-Optimization-Note/';
+          this.page.identifier = '2017/07/03/Performance-Optimization-Note/';
+          this.page.title = '性能优化笔记';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://http-lightthewoods-me.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
